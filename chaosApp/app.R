@@ -6,8 +6,8 @@ ui <- fluidPage(
                 
         column(2, tags$img(height = 180, width =150, src = "lorenz.png")),
         column(10,tags$h2("Exploring complexity with a simple equation"),tags$h4("by Jorge A. Ahumada"),
-               tags$a("The quadratic map is a simple difference equation: "),uiOutput("eq1"),
-               tags$a("with only one parameter ",tags$em("r")," that controls the dynamics of the system. By just changing the value of ",tags$em("r"), "the system goes from stable equilibrium, to dampening cycles, stable cycles and finally chaos! (for ",tags$em("r")," values bigger than 3.5). Slide the r scale and watch the dynamics of the system change before your eyes!  Set ",tags$em("r")," to 3.9. See how the the system becomes chaotic (e.g. irregular). Now, without changing ",tags$em("r")," change the initial value of the system, and watch the dynamics system change! This an important property of chaotic systems; ",tags$strong("their sensitivity to initial conditions."))
+               tags$a("The quadratic map is a simple difference equation describing the dynamics of a population of individuals in time:"),uiOutput("eq1"),
+               tags$a("The equation only has one parameter ",tags$em("r")," that controls the dynamics of the system. By just changing the value of ",tags$em("r"), "the system goes from stable equilibrium, to dampening cycles, stable cycles and finally chaos! (for ",tags$em("r")," values bigger than 3.5). Slide the r scale to see how the dynamics changes before your eyes!  Set ",tags$em("r")," to 3.9. See how the the system becomes chaotic (e.g. irregular). Now, without changing ",tags$em("r"),", change the initial value, and watch how the trajectory varies! This an important property of chaotic systems; ",tags$strong("their sensitivity to initial conditions."))
         )
 ),
         fluidRow(tags$br(), tags$hr(),
@@ -23,10 +23,10 @@ ui <- fluidPage(
         ),
         fluidRow(tags$br(),tags$br(),
                 column(5,plotOutput("cobweb")),
-                column(7,tags$br(),
+                column(7,
                        tags$h2("Another way of looking at the system"),
                        tags$a("We can look at the dynamics through a diagram called a cobweb.
-                              A cobweb essentially has three elements:"),
+                              A cobweb essentially has three elements:"),tags$br(),
                        tags$ol(
                       tags$li("A map of the function, in this case represented by the dark parabola. This is the function that maps the value of ",tags$em("N"),"at ",tags$em("t+1")," from the value of ",tags$em("N"),"at ",tags$em("t")),
                        tags$li("A line with slope 1 and intercept 0 which represents the equality function; in this case the dash straight line. Whenever the parabola intersects this line the value of ",tags$em("N")," is at equilibrium - it does not change between time steps."),
