@@ -2,60 +2,75 @@
 
 library(shiny)
 library(shinydashboard)
+library(ggplot2)
+library(dplyr)
 
 ui <- fluidPage(
-        withMathJax(),
+        #titlePanel(),
         fluidRow(
-                
-        tags$img(height = 100, width =300, src = "CI_Logo_Standard_English_French.png"),tags$strong("Moore Center for Science"),tags$hr()),
+                column(4,tags$img(height = 100, width =300, src = "CI_Logo_Standard_English_French.png"),tags$strong("Moore Center for Science"),tags$hr()),
+                 column(8,tags$h1("What happens to forests when we loose wildlife?"),tags$hr(),tags$p("Loosing wildlife has serious consequences for tropical forests"))),
         fluidRow(
-        tags$h2("What happens to forests when we loose wildlife?"),tags$hr(),tags$p("Some interesting text describing what we are showing")),
-        fluidRow(tags$br(), tags$hr(),
-                column(3,
-                       sliderInput(inputId = "def", label = tags$a("Choose a value for defaunation"),
-                                   value = 25, min = 0, max = 100, step = 25),
-                       selectInput(inputId = "country", label = "Select a country, a region or all",choices = c("Australia" = "Australia","Cameroon" = "Cameroon", "Congo" = "Congo","Costa Rica"="Costa Rica","India" = "India", "Indonesia" = "Indonesia", "Malaysia" = "Malaysia","Panama" = "Panama","Peru" = "Peru", "Tanzania" = "Tanzania", "All" = "All")),
-                       checkboxGroupInput(inputId = "variable", label = "Choose a variable", choices = c("Carbon" = "carbon", "Value" = "value", "Relative abundance" = "ra"), selected = "Carbon"),
-                       tags$hr(),
-                       checkboxInput(inputId = "rawdata",label = "See the raw data?", value = TRUE)
-                ),
-                column(9,plotOutput("plot"))
+                column(4,
+                               sliderInput(inputId = "def", label = tags$a("% of animal-dispersed trees lost"), value = 25, min = 25, max = 100, step = 25),
+                               selectInput(inputId = "country", label = "Select a country, a region or all",choices = c("Cameroon" = "Cameroon", "Congo" = "Congo","Costa Rica"="Costa Rica","India" = "India", "Indonesia" = "Indonesia", "Malaysia" = "Malaysia","Australia" = "Australia","Panama" = "Panama","Peru" = "Peru", "Tanzania" = "Tanzania", "All" = "All")),
+                               selectInput(inputId = "variable", label = "Choose a variable", choices = c("Carbon Biomass" = "carbon", "Carbon Value" = "value"), selected = "carbon"),
+                               tags$hr(),
+                               checkboxInput(inputId = "rawdata",label = "See the raw data?", value = FALSE)
+                        ),
+                column(8,plotOutput("plot"))
         )
-        
 )
 
-library(ggplot2)
-library(reshape)
-library(dplyr)
 carbon <- read.csv("data/sim_result_carbon.csv", header = T)
+carbon <- filter(carbon, scenario != "control_2")
+carbon <- droplevels(carbon)
+value <- cbind(carbon[,1:4],carbon[,5:8]*0.46)
 
 server <- function(input, output){
         
-        
-        data <- reactive({
-                data <- filter(carbon, country == input$country)
-                # get deforestation level
-                deflevel <- numeric()
-                
-                if (input$def == 0) {
-                        deflevel <- "original"
-                } else if (input$def == 25) {
-                        deflevel <- 5
-                } else if (input$def == 50) {
-                        deflevel <- 6
-                } else if (input$def == 75) {
-                        deflevel <- 7
-                } else 
-                        deflevel <- 8
-                
-                select(data, c(1:4,deflevel))
-                
+        #load the appropiate data set
+        mainData <- reactive({
+                if(input$variable == "carbon")
+                        carbon
+                else
+                        value
         })
+        
+        #filter by country
+        ctryData <- reactive({
+                if(input$country == "All")
+                        mainData()
+                else
+                        filter(mainData(), country == input$country)
+        })
+                
+        # filter by deforestation level
+        defData <- reactive({
+                def <- paste("rem_",input$def,sep="")
+                #size_means <- summarise(group_by(ctryData(),scenario), mean(ctryData()[,def]))
+                #size_means <- as.numeric(size_means$mean)
+                size_means <- as.numeric(tapply(ctryData()[,def], ctryData()[,"scenario"], mean))
+                list(values=ctryData(), size_means=size_means, def = def)
+        })       
         
         
         
         output$plot <- renderPlot({
-                ggplot(data, aes)
+                if(input$variable == "carbon")
+                        ytitle <- "Tons of carbon per hectare"
+                else
+                        ytitle <- "Value of carbon in $US"
+                
+                yvalues <- defData()$values[,defData()$def]
+                p <- ggplot(defData()$values, aes(x=scenario, y = yvalues)) + stat_summary(fun.y = "mean", geom="point", size = defData()$size_means/3, alpha = 0.5, color = c("green","red"))  + xlab("") + ylab(ytitle) + ggtitle(input$country) + scale_x_discrete(labels = c("Intact Forest","Defaunated")) + theme_linedraw() + geom_hline(yintercept = defData()$size_means, color = c("green","red"), size = 1, linetype = 2) + expand_limits(y=c(min(yvalues),max(yvalues)))
+                
+                if (!input$rawdata)
+                        p
+                else
+                        p + geom_jitter(alpha = 0.2)
+                
+                
         })
         
 }
