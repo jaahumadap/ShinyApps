@@ -9,7 +9,7 @@ ui <- fluidPage(
         #titlePanel(),
         fluidRow(
                 column(4,tags$img(height = 100, width =300, src = "CI_Logo_Standard_English_French.png"),tags$strong("Moore Center for Science"),tags$hr()),
-                 column(8,tags$h1("What happens to forests when we loose wildlife?"),tags$hr(),tags$p("Loosing wildlife has serious consequences for tropical forests"))),
+                 column(8,tags$h1("What happens to forests when we lose wildlife?"),tags$hr(),tags$p("Losing wildlife has serious consequences for tropical forests"))),
         fluidRow(
                 column(4,
                                sliderInput(inputId = "def", label = tags$a("% of animal-dispersed trees lost"), value = 25, min = 25, max = 100, step = 25),
@@ -58,12 +58,16 @@ server <- function(input, output){
         
         output$plot <- renderPlot({
                 if(input$variable == "carbon")
-                        ytitle <- "Tons of carbon per hectare"
+                        ytitle <- "Tons of carbon stored per hectare"
                 else
                         ytitle <- "Value of carbon in $US"
                 
+                def_label <- paste(input$def,"% of AD trees removed")
+                
                 yvalues <- defData()$values[,defData()$def]
-                p <- ggplot(defData()$values, aes(x=scenario, y = yvalues)) + stat_summary(fun.y = "mean", geom="point", size = defData()$size_means/3, alpha = 0.5, color = c("green","red"))  + xlab("") + ylab(ytitle) + ggtitle(input$country) + scale_x_discrete(labels = c("Intact Forest","Defaunated")) + theme_linedraw() + geom_hline(yintercept = defData()$size_means, color = c("green","red"), size = 1, linetype = 2) + expand_limits(y=c(min(yvalues),max(yvalues)))
+                ylim <- range(defData()$values[,defData()$def])
+                
+                p <- ggplot(defData()$values, aes(x=scenario, y = yvalues)) + xlab("State of the forest") + ylab(ytitle) + ggtitle(input$country) + scale_x_discrete(labels = c("Intact Forest",def_label)) + theme_linedraw() +  expand_limits(y=c(min(yvalues),max(yvalues))) + stat_summary(fun.y = "mean", geom="point")#, alpha = 0.5, fill = c("green","red")) + geom_hline(yintercept = defData()$size_means, color = c("green","red"), size = 1, linetype = 2) 
                 
                 if (!input$rawdata)
                         p
