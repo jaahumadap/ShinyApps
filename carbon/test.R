@@ -31,3 +31,13 @@ data2 <- filter(data2, scenario !="control_2")
 
 head(carbon)
 tapply(carbon[,"rem_25"], carbon[,"scenario"], mean)
+
+carbon <- read.csv("carbon/data/sim_result_carbon-$-.csv", header = T)
+carbon <- filter(carbon, scenario != "control_2" & scenario != "control_1")
+carbon <- droplevels(carbon)
+value <- select(carbon,-c(4,6,8,10,12))
+carbon <- select(carbon, c(1:4,6,8,10,12))
+carbon <- melt(carbon,variable_name = "def",id.vars = c("scenario","country"),measure.vars = 4:8)
+value <- melt(value,variable_name = "def",id.vars = c("scenario","country"),measure.vars = 4:8)
+names(carbon)[3] <- "def"
+names(value)[3] <- "def"
